@@ -1,0 +1,46 @@
+package svu_ugc;
+
+import java.awt.Desktop;
+import java.io.File;
+import java.util.Arrays;
+import java.util.Comparator;
+
+public class FileUtilsHelper {
+
+    public static File getLatestExcel(String folderPath) {
+        File dir = new File(folderPath);
+
+        // Get only files ending with .xlsx
+        File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".xlsx"));
+
+        if (files == null || files.length == 0) {
+            throw new RuntimeException("No Excel files found in: " + folderPath);
+        }
+
+        // Sort by last modified time and return the newest one
+        return Arrays.stream(files)
+                .max(Comparator.comparingLong(File::lastModified))
+                .orElseThrow(() -> new RuntimeException("Could not find latest Excel"));
+    }
+    
+    
+    // Open Excel using a String path
+    public static void openExcelFile(String filePath) {
+        openExcelFile(new File(filePath)); // call the File version
+    }
+
+    // Open Excel using a File object
+    public static void openExcelFile(File file) {
+        try {
+            if (file.exists()) {
+                Desktop.getDesktop().open(file);
+                System.out.println("✅ Excel file opened: " + file.getAbsolutePath());
+            } else {
+                System.out.println("❌ Excel file not found: " + file.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
