@@ -1,0 +1,1174 @@
+package svu_ugc;
+
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.swing.text.DateFormatter;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.annotations.AfterSuite;
+import org.testng.annotations.Test;
+
+import com.google.gson.JsonArray;
+
+import io.restassured.RestAssured;
+import io.restassured.http.Method;
+import io.restassured.parsing.Parser;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import svu_ugc.ApiResponse.EnrollmentNumber;
+
+
+public class Ugc_Runner {
+
+	public String fileaname;
+	public String AddmissionNOindex;
+	File latestFile;
+	File latestUGCFile;
+	
+	@Test(priority=1)
+	public void paymentdetailsExcel() throws IOException {
+
+	     // 1. Choose a folder where all Excel files will be saved
+        String downloadPath = "D:\\API\\university\\Excel_Automation";
+
+        // 2. Set Chrome preferences
+        Map<String, Object> prefs = new HashMap<>();
+        prefs.put("download.default_directory", downloadPath); // always save here
+        prefs.put("download.prompt_for_download", false);      // no popup
+        prefs.put("profile.default_content_settings.popups", 0);
+
+        ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption("prefs", prefs);
+
+		
+		
+		ChromeDriver driver = new ChromeDriver(options);
+		driver.manage().window().maximize();
+		driver.get("https://pgreports.atomtech.in/titan_merchant_console/home#no-back-button");
+		WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+		FileInputStream fis = null;
+		FileOutputStream fileOut = null;
+		try {
+			FileInputStream fileinput = new FileInputStream("D://University//SVU//SVU_uni.xlsx");
+			XSSFWorkbook workbook = new XSSFWorkbook(fileinput);
+			Sheet sheet = workbook.getSheetAt(0);
+			
+
+				WebElement username = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("userName")));
+				username.sendKeys("330350");
+
+				WebElement password = wait
+						.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@id='password']")));
+				password.sendKeys("Dde@1972");
+
+				WebElement login = wait
+						.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@value='Login']")));
+				login.click();
+				
+				WebElement transactions = wait.until(
+						ExpectedConditions.presenceOfElementLocated(By.xpath("//p[contains(text(),'Transactions')]")));
+				transactions.click();
+
+				Thread.sleep(1000);
+				WebElement viewtransactions = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//span[contains(text(),'View Transaction New')]")));
+				viewtransactions.click();
+				System.out.println("clicked");
+				
+				for (int i = 1; i <= 1; i++) {
+					Row row1 = sheet.getRow(i);
+					if (row1 == null) {
+						continue;
+					}
+			
+
+				LocalDate today = LocalDate.now();
+			    DateTimeFormatter formater = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ENGLISH);
+			    String livedate = today.format(formater);
+                 System.out.println(livedate);
+                 
+                 String  fromdate=today.minusDays(10).format(formater);
+			    System.out.println(fromdate);
+				Thread.sleep(1000);
+				WebElement FromDate = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@id='fromDate']")));
+
+				JavascriptExecutor js = (JavascriptExecutor) driver;
+				js.executeScript("document.getElementById('fromDate').value='"+fromdate+"';");
+			//	js.executeScript("document.getElementById('fromDate').value='19-08-2025';");
+			//	FromDate.sendKeys(Keys.TAB);  
+				Thread.sleep(1000);
+				WebElement Todate = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//input[@id='toDate']")));
+				js.executeScript("document.getElementById('toDate').value='"+livedate+"';");
+			//	js.executeScript("document.getElementById('toDate').value='"+todate+"';");
+				Thread.sleep(1000);
+				
+				System.out.println(i +" pass");
+				// 1. Click the visible dropdown button (not the <select>)
+				WebElement dropdownBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@data-id='transactionStatus']")));
+				dropdownBtn.click();
+
+				// 2. Wait and click the desired option (like ONLINE)
+				WebElement option = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//span[@class='text' and text()='Success']")));
+				((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", option);
+				Thread.sleep(300); // Optional
+				option.click();
+
+
+				Thread.sleep(1000);
+			    WebElement search = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[@id='search']")));
+			    wait.until(ExpectedConditions.elementToBeClickable(search));
+			    search.click();
+			    
+			    WebElement xlsx = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//a[contains(text(), 'XLSX')]")));////a[contains(text(), 'XLSX')]
+			    js.executeScript("arguments[0].scrollIntoView(true);", xlsx);
+			    wait.until(ExpectedConditions.elementToBeClickable(xlsx));
+			    xlsx.click();
+			    Thread.sleep(2000);
+			}
+				
+			FileOutputStream fileout = new FileOutputStream("D://University//SVU//SVU_uni.xlsx");
+			workbook.write(fileout);
+	    	System.out.println("SUCCESSFULLY GET THE PAYMENT DETAILS EXCEL");
+
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		} finally {
+			try {
+				if (fileOut != null) {
+					fileOut.close();
+				}
+				if (fis != null) {
+					fis.close();
+				}
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		  if (driver != null) {
+		         driver.quit(); // Close the WebDriver session
+		          
+		        }
+	}
+   
+    @Test(priority=2)
+    public void  paymentUpload() throws ParseException
+    {
+      	 FileInputStream fis = null;
+         FileOutputStream fileOut = null;
+         String downloadPath = "D:\\API\\university\\Excel_Automation";
+
+         // 1. Get the latest downloaded Excel file
+         File latestFile = FileUtilsHelper.getLatestExcel(downloadPath);
+         System.out.println("Latest Excel file: " + latestFile.getName());
+         
+         try {
+             fis = new FileInputStream(latestFile);
+             XSSFWorkbook workbook = new XSSFWorkbook(fis);
+             Sheet sheet = workbook.getSheetAt(0);
+
+             int Rowcount = sheet.getPhysicalNumberOfRows();
+             System.out.println("Rowcount is "+ Rowcount);
+             for (int i = 1; i <= Rowcount; i++) {
+                 Row row = sheet.getRow(i);
+                 if (row == null) {
+                     System.out.println("Skipping empty row: " + i);
+                     continue;
+                 }
+                Row header = sheet.getRow(0);
+                if (header==null) {
+                	   System.out.println("Skipping empty header: " + i);
+                       continue;
+				}
+             	header.createCell(73).setCellValue("StatusCode");
+               String MerchantName = getCellValue(row.getCell(0));
+               String MerchantID=getCellValue(row.getCell(1));
+               String ClientCode=getCellValue(row.getCell(2));
+               String AtomTxnID=getCellValue(row.getCell(3));
+               String MerchantTxnID=getCellValue(row.getCell(4));
+               String Amount=getCellValue(row.getCell(5));
+               String Currency=getCellValue(row.getCell(6));
+               String TxnDate = getCellValue(row.getCell(7));  // e.g. "12-Aug-2025 11:33:18" OR "31-Aug-2025 21:38"
+
+               String inputDate = TxnDate;
+               Date date = null;
+               SimpleDateFormat formatWithSeconds = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss", Locale.ENGLISH);
+               SimpleDateFormat formatWithoutSeconds = new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.ENGLISH);
+               SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.ENGLISH);
+
+               try {
+                   // Try parsing with seconds first
+                   date = formatWithSeconds.parse(inputDate);
+               } catch (ParseException e) {
+                   // If it fails, try without seconds
+                   date = formatWithoutSeconds.parse(inputDate);
+               }
+
+               String formattedDate = outputFormat.format(date);
+             //  System.out.println(formattedDate);
+
+            String Product = getCellValue(row.getCell(8));
+            String TxnType = getCellValue(row.getCell(9));
+            String BankName = getCellValue(row.getCell(10));
+            String TxnStatus = getCellValue(row.getCell(11));
+            String ReconStatus = getCellValue(row.getCell(12));
+            String BankRefNo = getCellValue(row.getCell(13));
+            String AuthNo = getCellValue(row.getCell(14));
+            String CustomerAccNo = getCellValue(row.getCell(15));
+            String IFSCCode = getCellValue(row.getCell(16));
+            String SettlementDate = getCellValue(row.getCell(17));
+            String inputDate1 = SettlementDate; // value from Excel cell
+
+            // 🔹 Normalize first (fix "Sept" → "Sep")
+            if (inputDate1 != null) {
+                inputDate1 = inputDate1.replaceAll("(?i)Sept", "Sep");
+            }
+
+            SimpleDateFormat inputFormat1 = new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.ENGLISH);
+            SimpleDateFormat fallbackFormat = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+            SimpleDateFormat outputFormat1 = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+
+            String formattedDate1 = "";  // default empty (for request)
+
+            if (inputDate1 != null && !inputDate1.trim().isEmpty()) {
+                try {
+                    Date date1 = inputFormat1.parse(inputDate1.trim());
+                    formattedDate1 = outputFormat1.format(date1);
+                } catch (ParseException e) {
+                    try {
+                        // Try fallback without time
+                        Date date1 = fallbackFormat.parse(inputDate1.trim());
+                        formattedDate1 = outputFormat1.format(date1);
+                    } catch (ParseException ex) {
+                        System.out.println("❌ Unable to parse date: " + inputDate1);
+                        formattedDate1 = "";
+                    }
+                }
+            } else {
+                formattedDate1 = "";
+            }
+
+            // ✅ Use ONLY formattedDate1 in JSON
+   
+
+     //       System.out.println("👉 Final Date Value for request: '" + formattedDate1 + "'");
+
+            String MerchantType = getCellValue(row.getCell(18));
+            String Discriminator = getCellValue(row.getCell(19));
+            String EMIBank = getCellValue(row.getCell(20));
+            String CardIssuingBank = getCellValue(row.getCell(21));
+            String EMITenure = getCellValue(row.getCell(22));
+            String Udf1 = getCellValue(row.getCell(23));
+            String Udf2 = getCellValue(row.getCell(24));
+            String Udf3 = getCellValue(row.getCell(25));
+            String Udf4 = getCellValue(row.getCell(26));
+            String Udf9 = getCellValue(row.getCell(27));
+            String CardNumber = getCellValue(row.getCell(28));
+            String EMIStatus = getCellValue(row.getCell(29));
+            String EMIReason = getCellValue(row.getCell(30));
+            String EMIDate = getCellValue(row.getCell(31));
+             String TxnCharges = getCellValue(row.getCell(32));
+             if(TxnCharges==null || TxnCharges.trim().isEmpty())
+             {
+            	 TxnCharges="10";
+            	 row.createCell(32).setCellValue(TxnCharges);
+             }
+              String GST = getCellValue(row.getCell(33));
+              if (GST == null || GST.trim().isEmpty()) {
+            	    GST = "1.8";  // default value
+            	row.createCell(33).setCellValue(GST);
+            	}
+              
+              
+             String SBCess = getCellValue(row.getCell(34));
+             String KrishiKalyanCess = getCellValue(row.getCell(35));
+             String TotalChargeable = getCellValue(row.getCell(36));
+             if (TotalChargeable==null||TotalChargeable.trim().isEmpty()) {
+            	 TotalChargeable="11.8";
+            	 row.createCell(36).setCellValue(TotalChargeable);
+			}
+             String NetAmounttobePaid = getCellValue(row.getCell(37));
+             if (NetAmounttobePaid==null || NetAmounttobePaid.trim().isEmpty()) {
+            	 NetAmounttobePaid= Amount;
+            	 row.createCell(37).setCellValue(NetAmounttobePaid);
+			}
+             
+            String SettlementDate1 = getCellValue(row.getCell(38));
+       
+            String inputDate2 = SettlementDate1; // value from Excel cell
+            if (inputDate2 != null) {
+                inputDate2 = inputDate2.replaceAll("(?i)Sept", "Sep");
+            }
+            // Define input and output formats
+            SimpleDateFormat inputFormat2 = new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.ENGLISH);
+            SimpleDateFormat outputFormat2 = new SimpleDateFormat("dd-MMM-yyyy");
+
+            String formattedDate2 = "";  // default empty (for request)
+
+            // Only parse if the cell is not empty
+            if (inputDate2 != null && !inputDate2.trim().isEmpty()) {
+                try {
+                    Date date2 = inputFormat2.parse(inputDate2.trim());
+                    formattedDate1 = outputFormat1.format(date2);
+                } catch (ParseException e) {
+                    System.out.println("❌ Unable to parse date: " + inputDate2);
+                    formattedDate2 = "";  // fallback empty
+                }
+            } else {
+                // Excel cell is empty → keep it empty
+                formattedDate2 = "";
+            }
+
+        //    System.out.println("👉 Final Date Value for request: '" + formattedDate1 + "'");
+
+            
+            String AddressLine1 = getCellValue(row.getCell(39));
+            String AddressLine2 = getCellValue(row.getCell(40));
+            String Country = getCellValue(row.getCell(41));
+            String State = getCellValue(row.getCell(42));
+            String City = getCellValue(row.getCell(43));
+            String ZipCode = getCellValue(row.getCell(44));
+            String Description = getCellValue(row.getCell(45));
+            String RefundAmount = getCellValue(row.getCell(46));
+            String RefundInitiatedDate = getCellValue(row.getCell(47));
+            String RefundProcessedDate = getCellValue(row.getCell(48));
+            String RefundClosedDate = getCellValue(row.getCell(49));
+            String RefundClosingRemarks = getCellValue(row.getCell(50));
+            String CardType = getCellValue(row.getCell(51));
+            String Scheme = getCellValue(row.getCell(52));
+            String BeneficiaryName = getCellValue(row.getCell(53));
+            String IMPSStatus = getCellValue(row.getCell(54));
+            String SettlementType = getCellValue(row.getCell(55));
+            String UDFEX1 = getCellValue(row.getCell(56));
+            String UDFEX2 = getCellValue(row.getCell(57));
+            String UDFEX3 = getCellValue(row.getCell(58));
+            
+            DataFormatter formattertext = new DataFormatter();
+            String UDFEX31 = formattertext.formatCellValue(row.getCell(58));
+
+        //	String UDFEX31 = String.valueOf(intValue);
+            
+            String UDFEX4 = getCellValue(row.getCell(59));
+            String UDFEX5 = getCellValue(row.getCell(60));
+            String UDFEX6 = getCellValue(row.getCell(61));
+            String UDFEX7 = getCellValue(row.getCell(62));
+            String UDFEX8 = getCellValue(row.getCell(63));
+            String UDFEX9 = getCellValue(row.getCell(64));
+            String UDFEX10 = getCellValue(row.getCell(65));
+            String QRTransactionType = getCellValue(row.getCell(66));
+            String AtomMWMID = getCellValue(row.getCell(67));
+            String AtomTID = getCellValue(row.getCell(68));
+            String SwitchMID = getCellValue(row.getCell(69));
+            String SwitchTID = getCellValue(row.getCell(70));
+            String NdpsProcCode = getCellValue(row.getCell(71));
+            double doubleValue1 = Double.parseDouble(NdpsProcCode.trim()); // Handles "625.0"
+        	int intValue1 = (int) doubleValue1; // Converts to 625
+        	// Convert the integer back to String for sendKeys
+        	String NdpsProcCode1 = String.valueOf(intValue1);
+        	String UMN = getCellValue(row.getCell(72));
+            
+        	LocalDate today = LocalDate.now();
+        	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
+        	String liveformattedDate = today.format(formatter);
+            
+            
+        	String token = AuthUtil.getValidToken();
+
+        	RestAssured.baseURI = "https://api.svuddeonline.in";
+        	RestAssured.defaultParser = Parser.JSON;
+
+        	RequestSpecification req = RestAssured.given();
+
+        	req.header("Authorization", "Bearer " + token);
+        	req.header("Content-Type", "application/json");
+        	req.header("accept", "*/*");
+
+        	// Step 1: Build transaction object first
+        	JSONObject obj = new JSONObject();
+        	obj.put("transactionId", "0");
+        	obj.put("merchantName", MerchantName);
+        	obj.put("merchantId", MerchantID);
+        	obj.put("clientCode", ClientCode);
+        	obj.put("pgTransactionId", AtomTxnID);
+        	obj.put("merchantTransactionId", MerchantTxnID);
+        	obj.put("amount", Amount);
+        	obj.put("currency", Currency);
+        	obj.put("transactionDate", formattedDate);
+        	obj.put("product", Product);
+        	obj.put("transactionType", TxnType);
+        	obj.put("bankName", BankName);
+        	obj.put("transactionStatus", TxnStatus);
+        	obj.put("reconStatus", ReconStatus);
+        	obj.put("bankReferenceNo", BankRefNo);
+        	obj.put("authenticationNo", AuthNo);
+        	obj.put("customerAccountNo", CustomerAccNo);
+        	obj.put("ifscCode", IFSCCode);
+        	obj.put("settlementDate", formattedDate1);
+        	obj.put("merchantType", MerchantType);
+        	obj.put("discriminator", Discriminator);
+        	obj.put("emiBank", EMIBank);
+        	obj.put("cardIssuingBank", CardIssuingBank);
+        	obj.put("emiTenure", EMITenure);
+        	obj.put("udF1", Udf1);
+        	obj.put("udF2", Udf2);
+        	obj.put("udF3", Udf3);
+        	obj.put("udF4", Udf4);
+        	obj.put("udF9", Udf9);
+        	obj.put("cardNumber", CardNumber);
+        	obj.put("emiStatus", EMIStatus);
+        	obj.put("emiReason", EMIReason);
+        	obj.put("emiDate", EMIDate);
+        	obj.put("transactionCharges", TxnCharges);
+        	obj.put("gst", GST);
+        	obj.put("sbCess", SBCess);
+        	obj.put("krishiKalyanCess", KrishiKalyanCess);
+        	obj.put("totalChargeable", TotalChargeable);
+        	obj.put("totalAmount", NetAmounttobePaid);
+        	obj.put("settlementDate1", formattedDate2);
+        	obj.put("addressLine1", safeValue(AddressLine1));
+        	obj.put("addressLine2", safeValue(AddressLine2));
+        	obj.put("country", safeValue(Country));
+        	obj.put("state", safeValue(State));
+        	obj.put("city", safeValue(City));
+        	obj.put("zipCode", safeValue(ZipCode));
+        	obj.put("description", Description);
+        	obj.put("refundAmount", RefundAmount);
+        	obj.put("refundInitiatedDate", RefundInitiatedDate);
+        	obj.put("refundProcessedDate", RefundProcessedDate);
+        	obj.put("refundClosedDate", RefundClosedDate);
+        	obj.put("refundClosingRemarks", RefundClosingRemarks);
+        	obj.put("cardType", CardType);
+        	obj.put("scheme", Scheme);
+        	obj.put("beneficiaryName", BeneficiaryName);
+        	obj.put("impsStatus", IMPSStatus);
+        	obj.put("settlementType", SettlementType);
+        	obj.put("udfeX1", UDFEX1);
+        	obj.put("udfeX2", UDFEX2);
+        	obj.put("udfeX3", UDFEX31);
+        	obj.put("udfeX4", UDFEX4);
+        	obj.put("udfeX5", UDFEX5);
+        	obj.put("udfeX6", UDFEX6);
+        	obj.put("udfeX7", UDFEX7);
+        	obj.put("udfeX8", UDFEX8);
+        	obj.put("udfeX9", UDFEX9);
+        	obj.put("udfeX10", UDFEX10);
+        	obj.put("qrTransactionType", QRTransactionType);
+        	obj.put("pgmwmid", AtomMWMID);
+        	obj.put("pgtid", AtomTID);
+        	obj.put("switchMID", SwitchMID);
+        	obj.put("switchTID", SwitchTID);
+        	obj.put("ndpsProcCode", NdpsProcCode1);
+        	obj.put("umn", UMN);
+        	obj.put("importedOn", liveformattedDate);
+
+        	// Step 2: Add object to array
+        	JSONArray transactionsArray = new JSONArray();
+        	transactionsArray.add(obj);
+
+        	// Step 3: Wrap array in final JSON
+        	JSONObject objfinal = new JSONObject();
+        	objfinal.put("transactions", transactionsArray);
+
+        	// Step 4: Send request only after JSON is complete
+        	req.body(objfinal.toString());
+
+        	String endpoint = "/api/v1/PGTransaction";
+        	Response res = req.request(Method.POST, endpoint);
+
+        	// Debug logs
+   //     	System.out.println("Final JSON: " + objfinal.toString());
+   //   	System.out.println("API Response: " + res.asPrettyString());
+
+        	System.out.println(i+" Success "+res.getStatusCode());
+        //	 Sheet sheet2 = workbook.getSheetAt(1);   
+//    	       Row row2 = sheet2.getRow(i);
+//    			if (row2 == null) {
+//    				continue;}
+//    			
+    			Cell cell = row.createCell(73);
+    			cell.setCellValue(res.getStatusCode());
+    			
+             }
+     	
+         	System.out.println("SUCCESSFULLY UPLOADED THE PAYMENT DETAILS");
+
+             fileOut = new FileOutputStream(latestFile);
+             workbook.write(fileOut);
+             workbook.close();
+
+         } catch (IOException e) {
+             e.printStackTrace();
+         } finally {
+             try {
+                 if (fileOut != null) fileOut.close();
+                 if (fis != null) fis.close();
+             } catch (IOException e) {
+                 e.printStackTrace();
+             }
+         }
+}
+    
+    @Test(priority=3)
+    public void Payment_process()
+   {
+	String token = AuthUtil.getValidToken();
+	LocalDate today = LocalDate.now();
+	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH);
+	String formattedDate = today.format(formatter);
+	RestAssured.baseURI="https://api.svuddeonline.in";
+	RequestSpecification Req = RestAssured.given();
+
+	 JSONObject obj = new JSONObject();
+	 
+     obj.put("importedDate", formattedDate);
+    
+     Req.contentType("application/json");
+     Req.body(obj.toJSONString());
+	Req.header("Authorization", "Bearer " + token);
+	String endpoint = "/api/v1/PGTransaction/Process";
+	Response res = Req.request(Method.POST,endpoint);
+	
+	
+    System.out.println(res.asPrettyString());	
+	System.out.println("PAYMENT_PROCESS COMPLETED");
+
+}
+
+	@Test(priority=4)
+	public void admmissiondetails()
+	{
+	 FileInputStream fis = null;
+    FileOutputStream fileOut = null;
+    String downloadPath = "D:\\API\\university\\Excel_Automation";
+    File latestFile = FileUtilsHelper.getLatestExcel(downloadPath);
+    System.out.println("Latest File "+ latestFile);
+    
+    try {
+        fis = new FileInputStream(latestFile);
+        XSSFWorkbook workbook = new XSSFWorkbook(fis);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        int RowCount = sheet.getPhysicalNumberOfRows();
+        System.out.println("RowCount is "+ RowCount);
+        for (int i = 1; i <= RowCount; i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) {
+                System.out.println("Skipping empty row: " + i);
+                continue;
+            }
+           Row header = sheet.getRow(0);
+           if(header==null)
+           {
+        	   System.out.println("Skipping empty header: " + i);
+               continue;
+           }
+           
+           header.createCell(74).setCellValue("Enrollment NO");
+          String registernumber = getCellValue(row.getCell(56));
+
+		
+		 String token = AuthUtil.getValidToken();
+		 
+		  RestAssured.baseURI = "https://api.svuddeonline.in";
+          RestAssured.defaultParser = Parser.JSON;
+          RequestSpecification req = RestAssured.given();
+
+          req.header("Authorization", "Bearer " + token);
+          String endpoint = "/api/v1/ApplicantAdmission/"+registernumber+"/registrationno";
+          Response res = req.request(Method.GET, endpoint);
+
+        //  System.out.println(res.asPrettyString());
+           ApiResponse detailsResponse = res.as(ApiResponse.class);
+          EnrollmentNumber response = detailsResponse.getData();
+//          Sheet sheet2 = workbook.getSheetAt(1);
+//          Row row1 = sheet2.createRow(sheet2.getPhysicalNumberOfRows());
+       
+          if(response != null) {
+          System.out.println(i  + " Iteration");
+         String enrno = response.getAdmissionNo();
+         String regno = response.getRegistrationNo();
+       
+     //    row.createCell(74).setCellValue(regno);
+         row.createCell(74).setCellValue(enrno);
+          
+//          Cell responseCell = row.createCell(2); // This is after `orderindex` (index 4)
+//          responseCell.setCellValue(enrno);
+//          Cell responseCells = row.createCell(3); // This is after `orderindex` (index 4)
+//          responseCells.setCellValue(regno);
+          }
+          else {
+        	  System.out.println("Response is null");
+        	  row.createCell(1).setCellValue("NUll");
+          }
+	}
+	
+    	
+
+        fileOut = new FileOutputStream(latestFile);
+        workbook.write(fileOut);
+        workbook.close();
+        System.out.println("SUCCESSFULLY GET THE ENROLLMENT_NUMBER");
+    } catch (IOException e) {
+        e.printStackTrace();
+    } finally {
+        try {
+            if (fileOut != null) fileOut.close();
+            if (fis != null) fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+	
+	@Test(priority=5)
+	
+	public void getpathUGCdata()
+	{
+
+		 String token = AuthUtil.getValidToken();
+		 
+		  RestAssured.baseURI = "https://api.svuddeonline.in";
+         RestAssured.defaultParser = Parser.JSON;
+         RequestSpecification req = RestAssured.given();
+
+         req.header("Authorization", "Bearer " + token);
+         String endpoint = "/api/v1/Applicant/GetUGCData";
+         Response res = req.request(Method.GET, endpoint);
+
+       //  System.out.println(res.asPrettyString());
+         
+        ugcResponse ugcres = res.as(ugcResponse.class);
+        System.out.println(ugcres.getFileName());
+        
+       fileaname = ugcres.getFileName();
+     	System.out.println("SUCCESSFULLY GET THE UGCDATA_PATH");
+
+	}
+	
+	@Test(priority=6)
+	public void uidownloadUGCExcel() throws InterruptedException, IOException, AWTException {
+		getpathUGCdata();  // <-- this variable is called filename
+
+	// Step-2 : build today's date
+	LocalDate today = LocalDate.now();
+	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy", Locale.ENGLISH);
+	String formattedDate = today.format(formatter);
+
+	// Step-3 : build full URL with the dynamic date + filename
+	String url = "https://admin.svuddeonline.in/Downloads/Reports/UGCData/"+ formattedDate + "/" + fileaname;   // <-- use filename here
+
+	System.out.println("URL is : " + url);
+   
+	String Downloadugcpath = "D:\\API\\university\\UGC_EXCEL";
+        Map<String,Object> prefs = new HashMap<>();
+        prefs.put("download.default_directory", Downloadugcpath);
+        prefs.put("download.prompt_for_download", false);
+        prefs.put("profile.default_content_settings.popups", 0);
+        ChromeOptions options = new ChromeOptions();
+        options.setExperimentalOption("prefs", prefs);
+
+	ChromeDriver driver = new ChromeDriver(options);
+	driver.manage().window().maximize();
+	//1113_d5e0b263-5922-4d8c-8994-d869ccad0507.xlsx
+	driver.get(url);
+	Thread.sleep(1000);
+	Robot R = new Robot();
+	R.keyPress(KeyEvent.VK_ENTER);
+	R.keyRelease(KeyEvent.VK_ENTER);
+	System.out.println("SUCCESSFULLY GET THE UGCDATA_EXCEL");
+
+	if (driver != null) {
+	    driver.quit();
+	}
+}
+
+	@Test(priority=7)
+	public void uploadugcexcel() throws ParseException
+	{
+
+	   	 FileInputStream fis = null;
+	     FileOutputStream fileOut = null;
+	     String Downloadugcpath = "D:\\API\\university\\UGC_EXCEL";
+	     File latestUGCFile = FileUtilsHelper.getLatestExcel(Downloadugcpath);
+	     System.out.println("LatestUGCExcel "+ latestUGCFile);
+
+	     try {
+	    	 fis = new FileInputStream(latestUGCFile);
+	         XSSFWorkbook workbook = new XSSFWorkbook(fis);
+	         Sheet sheet = workbook.getSheetAt(0);
+	      //   Sheet sheet1 = workbook.getSheetAt(2);
+	         
+	        int LastRow = sheet.getPhysicalNumberOfRows();
+	        System.out.println("LastRow "+ LastRow);
+	         for (int i = 1; i <= LastRow; i++) {
+	             Row row = sheet.getRow(i);
+	             if (row == null) {
+	                 System.out.println("Skipping empty row: " + i);
+	                 continue;
+	             }
+	             
+	             Row header = sheet.getRow(0);
+	                if (header==null) {
+	                	   System.out.println("Skipping empty header: " + i);
+	                       continue;
+					}
+	             	header.createCell(14).setCellValue("Status");
+	             	header.createCell(15).setCellValue("Message");
+	           
+	           String  DEBuniqueID=getCellValue(row.getCell(1));
+	           String UniversityName = getCellValue(row.getCell(2));
+	           String CourseName = getCellValue(row.getCell(3));
+	           String AdmissionDate = getCellValue(row.getCell(4));  
+	           String formattedDate1 = null;
+	           if (CourseName==null||CourseName.trim().isEmpty()) {
+				System.out.println(i+" Skipping Diploma candidate");
+				 continue;
+			}
+
+	           try {
+	        	    AdmissionDate = AdmissionDate.replace("Sept", "Sep");
+	               // First try dd-MM-yyyy
+	               SimpleDateFormat df1 = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
+	               Date date1 = df1.parse(AdmissionDate);
+	               formattedDate1 = df1.format(date1);
+	           } catch (ParseException e1) {
+	               try {
+	                   // If that fails, try dd-MMM-yyyy HH:mm
+	                   SimpleDateFormat df2 = new SimpleDateFormat("dd-MMM-yyyy HH:mm", Locale.ENGLISH);
+	                   Date date2 = df2.parse(AdmissionDate);
+	                   // format back to dd-MM-yyyy (for consistency)
+	                   SimpleDateFormat output = new SimpleDateFormat("dd-MM-yyyy");
+	                   formattedDate1 = output.format(date2);
+	                   System.out.println(formattedDate1);
+	               } catch (ParseException e2) {
+	                   System.out.println("❌ Unable to parse date: " + AdmissionDate);
+	               }
+	           }
+
+	      //     System.out.println("Final Formatted Date: " + formattedDate1);
+
+	           String AdmissionDetails = getCellValue(row.getCell(5));
+	           String EnrollmentNumber = getCellValue(row.getCell(6));
+	           String ModeEducation = getCellValue(row.getCell(7));
+	           String Category = getCellValue(row.getCell(8));
+	           String GovernmentIdentifier = getCellValue(row.getCell(9));
+	           String Locality = getCellValue(row.getCell(10));
+	           String Nationality = getCellValue(row.getCell(11));
+	            String GovernmentIdentifierNumber = getCellValue(row.getCell(12));
+	           String CountryResidence = getCellValue(row.getCell(13));
+
+	             RestAssured.baseURI="https://deb.ugc.ac.in/api";
+	             RequestSpecification req = new RestAssured().given();
+	             RestAssured.defaultParser=Parser.JSON;
+	             req.header("Content-Type", "application/json");
+	 	    	req.header("accept", "*/*");
+	 	    	req.header("APIKey","zFgDcNS4Bgwo1vntXdwqojT1d543UJy5");
+	 	    	req.header("ClientID","SVUT0037_GetAdmissionDetails");
+	 	    	
+	 	    	
+	             req.queryParam("SVUT0037_GetAdmissionDetails", "zFgDcNS4Bgwo1vntXdwqojT1d543UJy5");
+	             req.queryParam("DEBuniqueID", DEBuniqueID);
+	             req.queryParam("UniversityName", UniversityName);
+	             req.queryParam("CourseName", CourseName);
+	             req.queryParam("AdmissionDate", formattedDate1);
+	             req.queryParam("AdmissionDetails", AdmissionDetails);
+	             req.queryParam("EnrollmentNumber", EnrollmentNumber);
+	             req.queryParam("ModeEducation", ModeEducation);
+	             req.queryParam("Category", Category);
+	             req.queryParam("GovernmentIdentifier", GovernmentIdentifier);
+	             req.queryParam("Locality", Locality);
+	             req.queryParam("Nationality", Nationality);
+	             req.queryParam("GovernmentIdentifierNumber",GovernmentIdentifierNumber);
+	             req.queryParam("CountryResidence", CountryResidence);
+
+//	             System.out.println(DEBuniqueID);
+//	             System.out.println(UniversityName);
+//	             System.out.println(CourseName);
+//	             System.out.println(formattedDate1);
+//	             System.out.println(AdmissionDetails);
+//	             System.out.println(EnrollmentNumber);
+//	             System.out.println(ModeEducation);
+//	             System.out.println(Category);
+//	             System.out.println(GovernmentIdentifier);
+//	             System.out.println(Locality);
+//	             System.out.println(Nationality);
+//	             System.out.println(GovernmentIdentifierNumber);
+//	             System.out.println(CountryResidence);
+	         
+	             
+	           //  req.log().body();
+	             // ✅ Call the actual endpoint instead of ""
+	             Response res = req.post("/DebUniqueID/GetAdmissionDetails");
+
+	             POJO_ugc pojougc = res.as(POJO_ugc.class);
+	             
+	            String message = pojougc.getMessage();
+	            String Status = pojougc.getStatus();
+	            System.out.println(i+" "+Status);
+	       
+	           //  System.out.println(res.asPrettyString());
+	           //  System.out.println("Status code: " + res.getStatusCode());
+	      row.createCell(14).setCellValue(Status);
+	      row.createCell(15).setCellValue(message);
+
+	      
+		}
+	 	
+	 	
+	 	
+	         fileOut = new FileOutputStream(latestUGCFile);
+	         workbook.write(fileOut);
+	         workbook.close();
+		    	System.out.println("SUCCESSFULLY GET THE APPLICANT_UGC_DATA");
+
+	     } catch (IOException e) {
+	         e.printStackTrace();
+	     } finally {
+	         try {
+	             if (fileOut != null) fileOut.close();
+	             if (fis != null) fis.close();
+	         } catch (IOException e) {
+	             e.printStackTrace();
+	         }
+	     }
+
+	}
+	
+    @Test(priority=8)
+    public void AddmissionNOindex()
+    {
+		String token = AuthUtil.getValidToken();
+
+		RestAssured.baseURI = "https://api.svuddeonline.in";
+		RestAssured.defaultParser = Parser.JSON;
+		RequestSpecification req = RestAssured.given();
+
+		req.header("Authorization", "Bearer " + token);
+		String endpoint = "/api/v1/AcademicAdmissionNoIndex/excel";
+		Response res = req.request(Method.GET, endpoint);
+
+		// System.out.println(res.asPrettyString());
+
+		ugcResponse ugcres = res.as(ugcResponse.class);
+		System.out.println(ugcres.getFileName());
+
+		AddmissionNOindex = ugcres.getFileName();
+    	System.out.println("SUCCESSFULLY GET THE AdMISSIONOMBERS_EXCEL_PATH");
+
+    }
+ 
+    @Test(priority=9)
+     public void AddmissionNOindexUI() throws InterruptedException, AWTException {
+    	
+    	AddmissionNOindex();
+    	LocalDate today = LocalDate.now();
+    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy", Locale.ENGLISH);
+    	String formattedDate = today.format(formatter);
+
+    	// Step-3 : build full URL with the dynamic date + filename
+    	String url = "https://admin.svuddeonline.in/Downloads/Reports/AdmissionIndex/" 
+    	              + formattedDate + "/" + AddmissionNOindex;   // <-- use filename here
+
+    	System.out.println("URL is : " + url);
+    	String AddmissionNOindexpath = "D:\\API\\university\\Adminindex_Automation";
+    	Map<String,Object> prefs = new HashMap<>();
+    	prefs.put("download.default_directory", AddmissionNOindexpath);
+    	prefs.put("download.prompt_for_download", false);
+    	prefs.put("download.default_content_settings_popups", 0);
+    	
+    	ChromeOptions options = new ChromeOptions();
+    	options.setExperimentalOption("prefs", prefs);
+    	
+    	ChromeDriver driver = new ChromeDriver(options);
+    	driver.manage().window().maximize();
+    	//1113_d5e0b263-5922-4d8c-8994-d869ccad0507.xlsx
+    	driver.get(url);
+    	Thread.sleep(1000);
+    	Robot R = new Robot();
+    	R.keyPress(KeyEvent.VK_ENTER);
+    	R.keyRelease(KeyEvent.VK_ENTER);
+    	System.out.println("SUCCESSFULLY GET THE AdMISSIONOMBERS_EXCEL");
+    	if (driver != null) {
+    	    driver.quit();
+    	}
+    }
+
+    @Test(priority=10)
+    public void Substract() throws IOException {
+    	 FileInputStream fis = null;
+	     FileOutputStream fileOut = null;
+    	String Admissionindexpath = "D:\\API\\university\\Adminindex_Automation";
+    	File AdmissionindeExcel = FileUtilsHelper.getLatestExcel(Admissionindexpath);
+    	try {
+    	 fis = new FileInputStream(AdmissionindeExcel);
+    	XSSFWorkbook workbook = new XSSFWorkbook(fis);
+    	Sheet sheet = workbook.getSheetAt(0);
+    	int Rowcount = sheet.getPhysicalNumberOfRows();
+    	for(int i=1;i<=Rowcount;i++)
+    	{
+    		Row row = sheet.getRow(i);
+    		if (row==null) {
+				System.out.println("Skipping Empty Row "+i);
+				continue;
+			}
+    		
+    		Row header = sheet.getRow(0);
+    		if (row==null) {
+				System.out.println("Skipping  header "+i);
+				continue;
+			}
+    		header.createCell(6).setCellValue("Count");
+    		 int Starting_Index = (int) row.getCell(4).getNumericCellValue();
+    		int Current_Index = (int) row.getCell(5).getNumericCellValue();
+    		int Actual = Current_Index-Starting_Index;
+    		
+    		row.createCell(6).setCellValue(Actual);
+    		//System.out.println(Actual);
+    		
+    	}
+    	
+    	  fileOut = new FileOutputStream(AdmissionindeExcel);
+	    workbook.write(fileOut);
+	    workbook.close();
+		    	System.out.println("SUCCESSFULLY GET THE APPLICANT_UGC_DATA");
+
+	     } catch (IOException e) {
+	         e.printStackTrace();
+	     } finally {
+	    	 try{	 
+	    		if(fileOut!=null)fileOut.close();
+    	        if(fis!=null) fis.close();
+	    		 }
+	    		 catch (Exception e) {
+					// TODO: handle exception
+	    			 e.printStackTrace();
+	    		 }}
+	}
+    
+    @Test(priority=11)
+	public void Extract()
+	{
+
+	   	 FileInputStream fis = null;
+	     FileOutputStream fileOut = null;
+	     String Downloadugcpath = "D:\\API\\university\\UGC_EXCEL";
+	     File latestUGCFile = FileUtilsHelper.getLatestExcel(Downloadugcpath);
+	     System.out.println("LatestUGCExcel "+ latestUGCFile);
+	     try {
+	    	 fis = new FileInputStream(latestUGCFile);
+	         XSSFWorkbook workbook = new XSSFWorkbook(fis);
+	         Sheet sheet = workbook.getSheetAt(0);
+	      //   Sheet sheet1 = workbook.getSheetAt(2);
+	        int Rowcount = sheet.getPhysicalNumberOfRows();
+	         for (int i = 1; i <= Rowcount; i++) {
+	        	 Row header = sheet.getRow(0);
+	        	 if(header==null)
+	        	 {
+	        		 header=sheet.createRow(0);
+	        	 }
+	        	 header.createCell(16).setCellValue("StudyCenter");
+	        	 header.createCell(17).setCellValue("Course Code");
+	             Row row = sheet.getRow(i);
+	             if (row == null) {
+	                 System.out.println("Skipping empty row: " + i);
+	                 continue;
+	             }
+	           
+	           String  EnrNO=getCellValue(row.getCell(6));
+	           
+	          String StudyCenter = EnrNO.substring(3, 6);
+	          String CourseCode = EnrNO.substring(7, 10);
+	          
+	        //  System.out.println(StudyCenter+" "+ CourseCode);
+	         
+	           //  System.out.println(res.asPrettyString());
+	           //  System.out.println("Status code: " + res.getStatusCode());
+	      row.createCell(16).setCellValue(StudyCenter);
+	      row.createCell(17).setCellValue(CourseCode);
+	      
+	      
+	      Map<String,String> CorseMap = new HashMap< >();
+	      CorseMap.put("200", "MA_ECO");
+	      CorseMap.put("210", "MA_ENG");
+	      CorseMap.put("230", "MA_HIS");
+	      CorseMap.put("240", "MA_SOC");
+	      CorseMap.put("250", "MA_TEL");
+	      CorseMap.put("360", "MBA");
+	      CorseMap.put("350", "MCom_REG");
+	      CorseMap.put("580", "MCom_FM");
+	      CorseMap.put("510", "MLISc");
+	      CorseMap.put("480", "MSc_BOT");
+	      CorseMap.put("320", "MSc_CHE");
+	      CorseMap.put("290", "MSc_COMP");
+	      CorseMap.put("280", "MSc_MATHS");
+	      CorseMap.put("310", "MSc_PHY");
+	      CorseMap.put("600", "MSc_STATS");
+	      CorseMap.put("330", "MSc_ZOO");
+		  CorseMap.put("270", "MSW");
+		  CorseMap.put("440", "PGDGC");
+		  CorseMap.put("430", "PGDIRPM");
+		  header.createCell(18).setCellValue("Course");
+		  String courseName = CorseMap.get(CourseCode);
+		  row.createCell(18).setCellValue(courseName != null ? courseName : "NOT FOUND");
+		  System.out.println(courseName);
+		  
+	         }
+	 	
+	 	
+	 	
+	         fileOut = new FileOutputStream(latestUGCFile);
+	         workbook.write(fileOut);
+	         workbook.close();
+	         
+	     } catch (IOException e) {
+	         e.printStackTrace();
+	     } finally {
+	         try {
+	             if (fileOut != null) fileOut.close();
+	             if (fis != null) fis.close();
+	         } catch (IOException e) {
+	             e.printStackTrace();
+	         }
+	     }
+
+	
+	}
+    
+    @Test(priority=12)
+    public void admissionstats()
+    {
+    	String token = AuthUtil.getValidToken();
+    	RestAssured.baseURI="https://api.svuddeonline.in";
+    	RestAssured.defaultParser=Parser.JSON;
+    	RequestSpecification req = RestAssured.given();
+    	req.header("Authorization","bearer "+ token);
+    	Response res = req.request(Method.GET,"/api/v1/AcademicYear/jul25/A/admissionstats");
+    	System.out.println(res.asPrettyString());
+    	System.out.println("SUCCESSFULLY GET THE AdMISSIONSTATS");
+    }
+   
+       @AfterSuite(enabled=true)
+    public void openAllExcels() {
+    	 try {
+    	        File latestFile1 = FileUtilsHelper.getLatestExcel("D:\\API\\university\\Excel_Automation");
+    	        File latestFile2 = FileUtilsHelper.getLatestExcel("D:\\API\\university\\UGC_EXCEL");
+    	     File latestFile3 = FileUtilsHelper.getLatestExcel("D:\\API\\university\\Adminindex_Automation");
+
+    	        FileUtilsHelper.openExcelFile(latestFile1);
+    	        FileUtilsHelper.openExcelFile(latestFile2);
+    	       FileUtilsHelper.openExcelFile(latestFile3);
+
+    	    } catch (Exception e) {
+    	        e.printStackTrace();
+    	    }
+    }
+       
+    private void openIfValid(File file) {
+        if (file != null && file.exists()) {
+            FileUtilsHelper.openExcelFile(file);
+        } else {
+            System.out.println("⚠️ Skipping file: " + (file == null ? "null" : file.getAbsolutePath()));
+        }
+    }
+    
+     public String getCellValue(Cell cell) {
+    	 if (cell == null || cell.getCellType() == CellType.BLANK) {
+    		    return "";  // Must be "" not null
+    		}
+
+    	    switch (cell.getCellType()) {
+    	        case STRING:
+    	            return cell.getStringCellValue().trim();
+
+    	        case NUMERIC:
+    	            if (DateUtil.isCellDateFormatted(cell)) {
+    	                // Convert Excel date to String
+    	                java.util.Date date = cell.getDateCellValue();
+    	                SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm");
+    	                return sdf.format(date);
+    	            } else {
+    	                double value = cell.getNumericCellValue();
+    	                if (value == Math.floor(value)) {
+    	                    return String.valueOf((long) value); // No decimal if integer
+    	                } else {
+    	                    return String.valueOf(value);
+    	                }
+    	            }
+
+    	        case BOOLEAN:
+    	            return String.valueOf(cell.getBooleanCellValue());
+
+    	        case FORMULA:
+    	            try {
+    	                FormulaEvaluator evaluator = cell.getSheet().getWorkbook()
+    	                        .getCreationHelper().createFormulaEvaluator();
+    	                Cell evaluatedCell = evaluator.evaluateInCell(cell);
+    	                return getCellValue(evaluatedCell); // Recursive call for result
+    	            } catch (Exception e) {
+    	                return "";
+    	            }
+
+    	        default:
+    	            return "";
+    	    }}
+     
+     private String safeValue(String value) {
+    	    if (value == null) {
+    	        return ""; // API accepts empty string
+    	    }
+    	    value = value.trim(); 
+    	    return value.isEmpty() ? "" : value; 
+    	}
+
+     public static File getLatestExcel(String folderPath) {
+         File dir = new File(folderPath);
+
+         // Get only files ending with .xlsx
+         File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".xlsx"));
+
+         if (files == null || files.length == 0) {
+             throw new RuntimeException("No Excel files found in: " + folderPath);
+         }
+
+         // Sort by last modified time and return the newest one
+         return Arrays.stream(files)
+                 .max(Comparator.comparingLong(File::lastModified))
+                 .orElseThrow(() -> new RuntimeException("Could not find latest Excel"));
+     }
+}
